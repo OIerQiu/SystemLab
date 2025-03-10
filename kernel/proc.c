@@ -169,6 +169,7 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  p->trace_mask = 0;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -294,6 +295,9 @@ fork(void)
     release(&np->lock);
     return -1;
   }
+
+  np -> trace_mask = p -> trace_mask;
+
   np->sz = p->sz;
 
   // copy saved user registers.
@@ -685,4 +689,17 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+uint64
+getnproc(void) 
+{
+  uint64 count = 0;
+
+  for(struct proc *p = proc; p < &proc[NPROC]; p++) {
+    if(p->state != UNUSED)
+      count++;
+  }
+  
+  return count;
 }

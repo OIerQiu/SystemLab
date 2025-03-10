@@ -1,0 +1,38 @@
+预备工作：
+直接用了之前配的WSL
+最开始执行了以下语句：
+    git clone https://github.com/liyaoxuan/CS2953-2024.git
+    cd CS2953-2024
+其中上述指令由于网络原因失败过几次，换了个时间就好了。
+    make clean
+    make qemu
+虚拟机启动了，但是死活退不出来，之后问了别人才知道Ctrl+a+松掉Ctrl快速按x才能退出。
+
+第一个任务：sleep
+主要是用来熟悉如何往系统中加可执行命令。
+echo.c基本把框架给搭好了，rm.c提示了错误的处理方式。
+新增了sleep.c，调用下本就熟悉的sleep函数、往Makefile的UPROGS加路径就结束了。
+
+第二个任务：pingpong
+fork函数之前学过，查了pipe的用法。
+基本操作同sleep。
+先创建两个通道，方便亲子间的通信。
+fork() = 0为儿子，否则为父亲。
+然后利用buf作为储存容器，按要求写就完成了。
+
+第三个任务：System call tracing
+首先查看定义，trace会接受两个参数（后面所有参数算作程序的参数），按位存储的mask和要执行的程序，然后追踪程序的系统调用情况。
+看提示，首先添加路径。
+然后分别在 user/user.h（加定义），user/usys.pl（加entry，没看懂但是照着写了）， kernel/syscall.h（没找到有什么缺的）中添加定义。
+这样之后编译失败了，然后发现其实syscall.h中原先就有定义了，需要添加的是syscall.c中的syscalls和上面的extern定义。
+往前翻，发现sys_exit也接受了一个整数参数，sys_getpid用了myproc()这个神秘的东西，myproc()又和proc的练习紧密。
+再结合提示，往proc结构里加一个数据，在sysproc.c中加入了sys_trace函数来修改之前的那个数据，改一下fork()来传递数据，再改了sys_call来输出结果，最后再改了freeproc来初始化就好了。
+
+第四个任务：Sysinfo
+前面的步骤和第三个任务非常相似。
+在sys_fstat中存在argaddr(1, &st)来读取uint64。
+在filestat中存在copyout(p->pagetable, addr, (char *)&st, sizeof(st))来写出数据。
+于是就可以写出函数的主要部分。
+接着在kalloc.c，发现其空余内存是用链表存储的，而且一块的大小是PGSIZE，用扫一遍的方式就能找到有几个内存块。
+在proc.c，proc是用数组的方式来存储的，暴力扫一遍找出有几个不是UNUSED即可。
+之后发现还要往def里面放定义，然后就完成了。
