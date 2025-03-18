@@ -29,6 +29,45 @@ trapinithart(void)
   w_stvec((uint64)kernelvec);
 }
 
+void trap_save_trapframe(struct trapframe *tf, struct trapframe *old_tf) {
+  tf -> kernel_satp = old_tf -> kernel_satp;
+  tf -> kernel_sp = old_tf -> kernel_sp;
+  tf -> kernel_trap = old_tf -> kernel_trap;
+  tf -> epc = old_tf -> epc;
+  tf -> kernel_hartid = old_tf -> kernel_hartid;
+  tf -> ra = old_tf -> ra;
+  tf -> sp = old_tf -> sp;
+  tf -> gp = old_tf -> gp;
+  tf -> tp = old_tf -> tp;
+  tf -> t0 = old_tf -> t0;
+  tf -> t1 = old_tf -> t1;
+  tf -> t2 = old_tf -> t2;
+  tf -> s0 = old_tf -> s0;
+  tf -> s1 = old_tf -> s1;
+  tf -> a0 = old_tf -> a0;
+  tf -> a1 = old_tf -> a1;
+  tf -> a2 = old_tf -> a2;
+  tf -> a3 = old_tf -> a3;
+  tf -> a4 = old_tf -> a4;
+  tf -> a5 = old_tf -> a5;
+  tf -> a6 = old_tf -> a6;
+  tf -> a7 = old_tf -> a7;
+  tf -> s2 = old_tf -> s2;
+  tf -> s3 = old_tf -> s3;
+  tf -> s4 = old_tf -> s4;
+  tf -> s5 = old_tf -> s5;
+  tf -> s6 = old_tf -> s6;
+  tf -> s7 = old_tf -> s7;
+  tf -> s8 = old_tf -> s8;
+  tf -> s9 = old_tf -> s9;
+  tf -> s10 = old_tf -> s10;
+  tf -> s11 = old_tf -> s11;
+  tf -> t3 = old_tf -> t3;
+  tf -> t4 = old_tf -> t4;
+  tf -> t5 = old_tf -> t5;
+  tf -> t6 = old_tf -> t6;
+}
+
 //
 // handle an interrupt, exception, or system call from user space.
 // called from trampoline.S
@@ -77,8 +116,18 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2) {
+    if (p -> ticks > 0) {
+      p -> ticks_cnt ++;
+      if (p -> handler_running == 0 && p -> ticks_cnt >= p -> ticks) {
+        trap_save_trapframe(&(p -> saved_trapframe), p -> trapframe);
+        p -> trapframe -> epc = p -> handler;
+        p -> ticks_cnt = 0;
+        p -> handler_running = 1;
+      }
+    }
     yield();
+  }
 
   usertrapret();
 }

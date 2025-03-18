@@ -106,4 +106,10 @@ struct proc {
   char name[16];               // Process name (debugging)
 
   int trace_mask;              // Trace mask
+
+  int ticks;                   
+  uint64 handler;     
+  int ticks_cnt;
+  struct trapframe saved_trapframe;
+  int handler_running;
 };
