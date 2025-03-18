@@ -1,0 +1,20 @@
+前置准备：GDB
+拿着tmux调了半天，最后发现vscode可以直接新建一个终端。
+照着课上的指令分别启动了qemu和gdb，然后利用 b backtrace 设置断点，利用 bt、i f 0、i r fp、p/x 等来观察，n c 等来控制程序进行。
+但其实没太看懂这里面的每个变量到底是来干什么的，两个问题还是靠hints解决的。
+
+第一个任务：traps
+要求实现一个 backtrace() 函数，用于生成回溯信息。
+首先在printf.c中加入了一个输出"Test info."的程序，再在sys_sleep相应位置加入了backtrace，运行bttest，确实输出了Test info.
+然后实现backtrace。根据提示，利用r_fp()获取fp寄存器的地址，然后-8是返回值，-16是栈里更底层一位的fp地址。
+根据提示4，利用了PGROUNDDOWN(fp)来确保栈没有到底，但是实际上经过测试，要同时用PGROUNDUP(fp)来进行约束才行，然后就做完了。
+
+第二个任务：alarm
+要求实现周期性的触发指定函数调用。
+首先是和第一个lab一样把sigalarm和sigreturn加入到路径中，然后和第一个lab一样的方法获取systemcall的参数。
+之后修改了proc结构，将间隔的ticks、handler和经过的ticks都放在proc中，并在allocproc和freeproc均将这些参数初始化。
+每次进入 if (which_dev == 2) ... 这个循环中时将经过的ticks加一，然后判断是否不小于间隔的ticks，如果是，那就利用trapframe的epc来存放handler。（至于handler可能等于0，感觉不特判好像也没大问题）
+然后是test1的sigreturn，虽然只改了epc，但是只复原epc还是会错，因此直接将整个trapframe保存了下来，之后在复原。
+至于test2，则继续加个变量存储handler是否还在运行就行。
+对于test3，则需要将 trapframe 中的 a0 作为 sigreturn 最后返回的值。
+最后在测试了一下usertest，也通过了。
