@@ -1,0 +1,13 @@
+第一个任务：uthread
+根据提示，同时注意到内核中的swtch.S中有极其类似的代码，复制到uthread_switch.S就行。
+由于thread_switch时要保存callee saved寄存器，因此不妨在thread结构中多加一个数据来保存这些寄存器，然后根据提示写完就对了。
+
+第二个任务：pthread
+先看代码，发现ph.c貌似与其他代码没有任何关系，进一步看代码观察到它写了多个哈希表的读写操作。
+不难发现多个线程同时写入某个哈希表的时候会出现问题，因此为每个哈希表加个锁就行了。
+
+第三个任务：barrier
+每次操作前先上锁，最后解锁。
+nthread是到达barrier的thread数，那只要每次barrier都+1，同时让线程等待。
+barrier.nthread = nthread 时就说明所有线程都到了，此时让轮数+1，nthread归零，再宣告继续即可。
+然后就结束了。
