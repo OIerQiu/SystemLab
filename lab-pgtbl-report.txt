@@ -1,0 +1,14 @@
+Task1：加速getpid
+基本是依样画葫芦。在proc_pagetable中，按照trampoline和trapframe的示例补充usyscall即可，注意要可读和用户态可访问。
+需要提前在proc结构体中加入usyscall的位置。
+同时补充freeproc，allocproc，proc_freepagetable中的实现就行。
+
+Task2：打印页
+照着提到的freewalk来写就行。
+利用深搜的思想依次打印。
+要注意的是搜索层数只有3层，并且要通过PTE_V位判断是否有效。
+
+Task3：找被访问过的页并且刷新访问状态
+利用walk访问每页对应的pte，检查PTE_A的状态并且刷新。
+PTE_A = (1L << 6) 需要自己补充。
+最后利用copyout将结果复制到用户空间即可。
